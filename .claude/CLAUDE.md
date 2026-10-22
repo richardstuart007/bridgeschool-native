@@ -84,7 +84,9 @@ The global `~/.claude/CLAUDE.md` assumes Next.js + nextjs-shared. **This project
   player's cache.)
   - **Never more than one saved copy of a video on the phone.**
   - **Android:** save into a `BridgeSchool` gallery album (`expo-media-library`) — that one copy
-    is stored in `Movies/BridgeSchool`, so it shows in both the gallery and the Files app.
+    is stored in **`Internal storage/Pictures/BridgeSchool`** (confirmed on the user's Samsung,
+    2026-10-22; expo-media-library places albums under Pictures/, not Movies/), so it shows in
+    both the Gallery and My Files.
   - **iPhone:** save into the app's own Documents folder only, exposed in **Files > On My iPhone >
     BridgeSchool** (`UIFileSharingEnabled` + `LSSupportsOpeningDocumentsInPlace`). Not in Photos.
     No photo-library permission needed on iPhone.
@@ -97,3 +99,28 @@ The global `~/.claude/CLAUDE.md` assumes Next.js + nextjs-shared. **This project
 
 - r2.dev URLs are rate-limited and Cloudflare says not for production — consider a custom domain
   on the bucket before release.
+- App display name: **agreed "Bridge School"** (2026-10-22; "Bridge School Native" was tried
+  and reverted — too long for the home-screen label) — set `expo.name` in app.json (slug stays
+  `bridgeschool-native`). Not yet applied; part of the EAS preview-build plan.
+- Expo project created on expo.dev (2026-10-22) under organization `richardstuart007-team`
+  (personal login `richardstuart007`), slug `bridgeschool-native`, project ID
+  `d731deb1-ed1b-497f-ab42-2578d124eb92`. Link the code with
+  `npx eas-cli@latest init --id d731deb1-ed1b-497f-ab42-2578d124eb92` (writes the ID into
+  app.json) — part of the EAS preview-build plan. Expo Claude Code plugin offered on the page —
+  not installed (see below).
+- Development build not yet set up (EAS) — needed for Android saving and iPhone Files visibility.
+- Unused template packages (`@expo/ui`, `expo-glass-effect`, `expo-symbols`, `expo-image`,
+  `expo-web-browser`, `expo-device`) — decide whether to remove.
+- Template's `.claude/settings.json` (enables `expo@claude-plugins-official` Claude Code plugin)
+  was not adopted — decide whether to.
+- No Cancel button for an in-progress download; iPhone Remove has no confirmation.
+- **iPhone distribution** (most of the user's friends use iPhones, 2026-10-22): needs the Apple
+  Developer Program (~US$99/yr), an EAS iOS build, and TestFlight for friends (install TestFlight,
+  tap invite link). Android sideload link works but has several warning screens; Play Store
+  internal testing (US$25 one-off) is the friendlier Android route.
+- next-bridgeschool DB typo (user to run later in pgAdmin4, the web app's DB):
+  `UPDATE trf_reference SET rf_desc = 'Quantitative 4NT' WHERE rf_rfid = 21;` — the app's
+  `VIDEOS` already uses the corrected name.
+- App icon is still Expo's template placeholder; the web app's falling-aces logos were rejected
+  as icon options. Parked by the user for now.
+- Phone testing of the MVP (checklist in `docs/archive/PLAN_video-app-mvp.md` › Testing).
