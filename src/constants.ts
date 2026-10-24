@@ -6,6 +6,10 @@
 //    R2_BASE_URL  — public Cloudflare R2 bucket address; each video's rf_link is appended to it
 //    SAVED_FOLDER — name of the folder saved videos are kept in on the phone
 //    VIDEOS       — the video catalogue; rf_desc must be unique (it is the saved file name)
+//    ANDROID_APK_URL — fixed public download of the newest Android release (GitHub "latest"
+//                      release asset); richard-dashboard links to the same URL — never change
+//    GITHUB_LATEST_RELEASE_URL — GitHub API address of the newest release, read by the
+//                      update banner to learn the latest version
 //
 //  2) NOTES
 //    r2.dev addresses are rate-limited and not meant for production — connect a custom domain
@@ -17,6 +21,12 @@ import type { table_Reference } from '@/types'
 export const R2_BASE_URL = 'https://pub-13d8924a0e08436b9490bcbee03bb453.r2.dev'
 
 export const SAVED_FOLDER = 'BridgeSchool'
+
+export const ANDROID_APK_URL =
+  'https://github.com/richardstuart007/bridgeschool-native/releases/latest/download/AndroidBridgeschool.apk'
+
+export const GITHUB_LATEST_RELEASE_URL =
+  'https://api.github.com/repos/richardstuart007/bridgeschool-native/releases/latest'
 
 export const VIDEOS: table_Reference[] = [
   { rf_desc: 'Two Way Checkback', rf_link: 'Hollands/Two_Way_Checkback.mp4' },

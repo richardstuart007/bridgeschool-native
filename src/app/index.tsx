@@ -2,19 +2,27 @@
 //  1) DESCRIPTION
 //    VideosScreen — the app's home screen: one VideoRow per catalogue video. Tapping a saved
 //    video opens the Player; tapping an unsaved one downloads it (with progress) and then
-//    opens the Player. Saved videos can be removed.
+//    opens the Player. Saved videos can be removed. Below the list, the installed app
+//    version; on Android, an update banner above the list when a newer release exists.
 //
 //  2) NOTES
 //    Saved state is re-read from the phone every time the screen comes into focus, because
 //    files can be deleted outside the app.
 //    State maps are keyed by rf_desc (unique per catalogue rule).
+//    The newer-release check runs once when the screen first mounts (Android only); any
+//    failure simply means no banner.
+//
+//  3) CHANGE HISTORY
+//    2026-10-24 — version footer; Android update banner opening the Update help screen
 //==============================================================================================
 
-import { useCallback, useState } from 'react'
-import { ScrollView, StyleSheet } from 'react-native'
+import { useCallback, useEffect, useState } from 'react'
+import { Platform, ScrollView, StyleSheet, Text } from 'react-native'
 import { router, useFocusEffect } from 'expo-router'
 
+import UpdateBanner from '@/components/UpdateBanner'
 import VideoRow from '@/components/VideoRow'
+import { appVersion, isNewerVersion, latestReleaseVersion } from '@/appVersion'
 import { VIDEOS } from '@/constants'
 import { downloadVideo, isVideoSaved, removeSavedVideo } from '@/savedVideos'
 import type { table_Reference } from '@/types'
@@ -25,6 +33,16 @@ export default function VideosScreen() {
   const [savedByDesc, setSavedByDesc] = useState<Record<string, boolean>>({})
   const [progressByDesc, setProgressByDesc] = useState<Record<string, number>>({})
   const [errorByDesc, setErrorByDesc] = useState<Record<string, string>>({})
+  const [latestVersion, setLatestVersion] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function checkForUpdate() {
+      if (Platform.OS !== 'android') return
+      const version = await latestReleaseVersion()
+      setLatestVersion(version)
+    }
+    checkForUpdate()
+  }, [])
 
   //
   //  Re-read saved state whenever the screen is shown (callback must stay an arrow:
@@ -96,9 +114,14 @@ export default function VideosScreen() {
     progress: progressByDesc[video.rf_desc] ?? null,
     errorMessage: errorByDesc[video.rf_desc] ?? null
   }))
+  const installedVersion = appVersion()
+  const showUpdateBanner = latestVersion !== null && isNewerVersion(latestVersion, installedVersion)
+  const bannerVersion = latestVersion ?? ''
+  const versionText = `Bridge School v${installedVersion}`
 
   return (
     <ScrollView contentContainerStyle={styles.list}>
+      {showUpdateBanner && <UpdateBanner latestVersion={bannerVersion} onPress={openUpdate} />}
       {rows.map(row => (
         <VideoRow
           key={row.video.rf_desc}
@@ -110,6 +133,7 @@ export default function VideosScreen() {
           onRemove={() => handleRemove(row.video.rf_desc)}
         />
       ))}
+      <Text style={styles.version}>{versionText}</Text>
     </ScrollView>
   )
 }
@@ -120,6 +144,13 @@ export default function VideosScreen() {
 //----------------------------------------------------------------------------------------------
 function openPlayer(rf_desc: string): void {
   router.push({ pathname: '/player/[rf_desc]', params: { rf_desc } })
+}
+
+//----------------------------------------------------------------------------------------------
+//  openUpdate — navigates to the Update help screen
+//----------------------------------------------------------------------------------------------
+function openUpdate(): void {
+  router.push('/update')
 }
 
 //----------------------------------------------------------------------------------------------
@@ -135,5 +166,6 @@ function withoutKey<T>(map: Record<string, T>, key: string): Record<string, T> {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: 16, gap: 10 }
+  list: { padding: 16, gap: 10 },
+  version: { color: '#9ca3af', fontSize: 12, textAlign: 'center', marginTop: 12 }
 })

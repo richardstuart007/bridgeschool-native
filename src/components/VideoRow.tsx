@@ -1,8 +1,10 @@
 //==============================================================================================
 //  1) DESCRIPTION
-//    VideoRow — one video in the Videos list: its name, a status line (Saved / Downloading n%
-//    / error / Tap to download), a progress bar while downloading, and a Remove button once
-//    saved. Plain orange styling.
+//    VideoRow — one video in the Videos list, coloured by status:
+//      Not saved / downloading / failed — orange row, ⬇ icon, status text (Tap to download /
+//        Downloading n% with a progress bar / Download failed — tap to retry)
+//      Saved — green row, ▶ icon, "Saved — tap to play", and a small red Remove pill
+//    Tapping the row plays a saved video and downloads an unsaved one (handled by onPress).
 //
 //    Parameters:
 //      video        — the catalogue entry; rf_desc is shown as the name
@@ -14,11 +16,20 @@
 //
 //  2) NOTES
 //    The row ignores taps while its video is downloading.
+//    Icons are plain text symbols followed by U+FE0E (text presentation) so phones draw them as
+//    simple symbols rather than colour emoji.
+//
+//  3) CHANGE HISTORY
+//    2026-10-22 — status colours: orange (not saved) / green (saved), ⬇ / ▶ icons, "Saved — tap
+//                 to play", Remove is now a small red pill
 //==============================================================================================
 
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import type { table_Reference } from '@/types'
+
+const DOWNLOAD_ICON = '⬇︎'
+const PLAY_ICON = '▶︎'
 
 type Props = {
   video: table_Reference
@@ -33,14 +44,18 @@ export default function VideoRow(props: Props) {
   const { video, isSaved, progress, errorMessage, onPress, onRemove } = props
 
   const isDownloading = progress !== null
+  const showSaved = isSaved && !isDownloading
   const percent = isDownloading ? Math.round(progress * 100) : 0
   const statusText = statusLine(isDownloading, percent, errorMessage, isSaved)
   const showProgress = isDownloading
   const progressFillStyle = { width: `${percent}%` as const }
-  const showRemove = isSaved && !isDownloading
+  const rowStatusStyle = showSaved ? styles.rowSaved : styles.rowNotSaved
+  const icon = showSaved ? PLAY_ICON : DOWNLOAD_ICON
+  const showRemove = showSaved
 
   return (
-    <Pressable onPress={onPress} disabled={isDownloading} style={styles.row}>
+    <Pressable onPress={onPress} disabled={isDownloading} style={[styles.row, rowStatusStyle]}>
+      <Text style={styles.icon}>{icon}</Text>
       <View style={styles.textBlock}>
         <Text style={styles.name}>{video.rf_desc}</Text>
         <Text style={styles.status}>{statusText}</Text>
@@ -65,7 +80,7 @@ export default function VideoRow(props: Props) {
 //           percent       — download percentage (used while downloading)
 //           errorMessage  — last download failure, or null
 //           isSaved       — the video is saved on the phone
-//  Returns: e.g. 'Downloading 42%', 'Saved', 'Tap to download'
+//  Returns: e.g. 'Downloading 42%', 'Saved — tap to play', 'Tap to download'
 //----------------------------------------------------------------------------------------------
 function statusLine(
   isDownloading: boolean,
@@ -76,7 +91,7 @@ function statusLine(
   let text = 'Tap to download'
   if (isDownloading) text = `Downloading ${percent}%`
   else if (errorMessage) text = errorMessage
-  else if (isSaved) text = 'Saved'
+  else if (isSaved) text = 'Saved — tap to play'
   return text
 }
 
@@ -84,12 +99,14 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fb923c',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 14,
     gap: 12
   },
+  rowNotSaved: { backgroundColor: '#fb923c' },
+  rowSaved: { backgroundColor: '#16a34a' },
+  icon: { color: '#ffffff', fontSize: 22, width: 24, textAlign: 'center' },
   textBlock: { flex: 1, gap: 4 },
   name: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
   status: { color: '#ffffff', fontSize: 13 },
@@ -101,11 +118,10 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: 6, backgroundColor: '#ffffff' },
   removeButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#ffffff'
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: '#dc2626'
   },
-  removeText: { color: '#ffffff', fontSize: 13, fontWeight: '600' }
+  removeText: { color: '#ffffff', fontSize: 12, fontWeight: '600' }
 })
